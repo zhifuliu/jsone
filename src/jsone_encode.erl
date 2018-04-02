@@ -212,6 +212,11 @@ object_key(Key, Nexts, Buf, Opt = ?OPT{object_key_type = value}) ->
         {error, Reason} -> {error, Reason};
         {ok, BinaryKey} -> string(BinaryKey, Nexts, Buf, Opt)
     end;
+object_key(Key, Nexts, Buf, Opt = ?OPT{object_key_type = Fun}) when is_function(Fun) ->
+    case Fun(Key) of
+        K when ?IS_STR(K) -> string(K, Nexts, Buf, Opt);
+        _                 -> ?ERROR(object_key, [Key, Nexts, Buf, Opt])
+    end;
 object_key(Key, Nexts, Buf, Opt) ->
     ?ERROR(object_key, [Key, Nexts, Buf, Opt]).
 
@@ -365,7 +370,7 @@ parse_option([{space, N}|T], Opt) when is_integer(N), N >= 0 ->
     parse_option(T, Opt?OPT{space = N});
 parse_option([{indent, N}|T], Opt) when is_integer(N), N >= 0 ->
     parse_option(T, Opt?OPT{indent = N});
-parse_option([{object_key_type, Type}|T], Opt) when Type =:= string; Type =:= scalar; Type =:= value ->
+parse_option([{object_key_type, Type}|T], Opt) when Type =:= string; Type =:= scalar; Type =:= value; is_function(Type) ->
     parse_option(T, Opt?OPT{object_key_type = Type});
 parse_option([{datetime_format, Fmt}|T], Opt) ->
     case Fmt of
