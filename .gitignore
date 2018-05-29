@@ -12,3 +12,5 @@ doc/*
 .rebar
 _build
 .*.sw?
+.idea/
+*.iml
