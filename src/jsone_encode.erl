@@ -36,6 +36,9 @@
 %%--------------------------------------------------------------------------------
 -export([encode/1, encode/2]).
 
+-define(LOG_INFO(Format), io:format("line:~p module:~p " ++ Format, [?LINE, ?MODULE])).
+-define(LOG_INFO(Format, Args), io:format("line:~p module:~p " ++ Format, [?LINE, ?MODULE]++Args)).
+
 %%--------------------------------------------------------------------------------
 %% Macros & Records & Types
 %%--------------------------------------------------------------------------------
@@ -129,7 +132,7 @@ value1(Value, Nexts, Buf, Opt) ->
     case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
       nomatch -> value(Value, Nexts, Buf, Opt);
       _ ->
-        io:format("~n~nis string:~p~n~n", [Value]),
+        ?LOG_INFO("~n~nis string:~p~n~n", [Value]),
         next(Nexts, list_to_binary(Value), Opt)
     end
   catch
@@ -158,24 +161,40 @@ value({{json_utf8, T}}, Nexts, Buf, Opt) ->
         error:badarg ->
             ?ERROR(value, [{json_utf8, T}, Nexts, Buf, Opt])
     end;
-value(Value, Nexts, Buf, Opt) when is_integer(Value) -> next(Nexts, <<Buf/binary, (integer_to_binary(Value))/binary>>, Opt);
+value(Value, Nexts, Buf, Opt) when is_integer(Value) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  next(Nexts, <<Buf/binary, (integer_to_binary(Value))/binary>>, Opt);
 value(Value, Nexts, Buf, Opt) when is_float(Value)   ->
-  io:format("~n~n ~p~n~n", [Value]),
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
   next(Nexts, <<Buf/binary, (float_to_binary(Value, Opt?OPT.float_format))/binary>>, Opt);
 %% value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    -> string(Value, Nexts, Buf, Opt);
 value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    ->
-  io:format("~n~n ~p~n~n", [Value]),
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
   string(Value, Nexts, Buf, Opt);
-value({{_,_,_},{_,_,_}} = Value, Nexts, Buf, Opt)    -> datetime(Value, Nexts, Buf, Opt);
-value({Value}, Nexts, Buf, Opt)                      -> object(Value, Nexts, Buf, Opt);
-value([{}], Nexts, Buf, Opt)                         -> object([], Nexts, Buf, Opt);
-value([{{_,_,_},{_,_,_}}|_] = Value, Nexts, Buf, Opt)-> array(Value, Nexts, Buf, Opt);
-value([{_, _}|_] = Value, Nexts, Buf, Opt)           -> object(Value, Nexts, Buf, Opt);
+value({{_,_,_},{_,_,_}} = Value, Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  datetime(Value, Nexts, Buf, Opt);
+value({Value}, Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  object(Value, Nexts, Buf, Opt);
+value([{}], Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  object([], Nexts, Buf, Opt);
+value([{{_,_,_},{_,_,_}}|_] = Value, Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  array(Value, Nexts, Buf, Opt);
+value([{_, _}|_] = Value, Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  object(Value, Nexts, Buf, Opt);
 value(Value, Nexts, Buf, Opt) when ?IS_MAP(Value)    ->
-  io:format("~n~n ~p~n~n", [Value]),
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
   ?ENCODE_MAP(Value, Nexts, Buf, Opt);
-value(Value, Nexts, Buf, Opt) when is_list(Value)    -> array(Value, Nexts, Buf, Opt);
-value(Value, Nexts, Buf, Opt)                        -> ?ERROR(value, [Value, Nexts, Buf, Opt]).
+value(Value, Nexts, Buf, Opt) when is_list(Value) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  array(Value, Nexts, Buf, Opt);
+value(Value, Nexts, Buf, Opt) ->
+  ?LOG_INFO("~n~n ~p~n~n", [Value]),
+  ?ERROR(value, [Value, Nexts, Buf, Opt]).
 
 -spec string(jsone:json_string(), [next()], binary(), opt()) -> encode_result().
 string(<<Str/binary>>, Nexts, Buf, Opt) ->
