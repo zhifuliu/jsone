@@ -129,7 +129,7 @@ next(Level = [Next | Nexts], Buf, Opt) ->
 
 value1(Value, Nexts, Buf, Opt) ->
   try
-    case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
+    case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$", [unicode]) of
       nomatch ->
         value(Value, Nexts, Buf, Opt);
       _ ->
