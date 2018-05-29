@@ -178,7 +178,6 @@ value({Value}, Nexts, Buf, Opt) ->
   ?LOG_INFO("~n~n ~p~n~n", [Value]),
   object(Value, Nexts, Buf, Opt);
 value([{}], Nexts, Buf, Opt) ->
-  ?LOG_INFO("~n~n ~p~n~n", [Value]),
   object([], Nexts, Buf, Opt);
 value([{{_,_,_},{_,_,_}}|_] = Value, Nexts, Buf, Opt) ->
   ?LOG_INFO("~n~n ~p~n~n", [Value]),
