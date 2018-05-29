@@ -36,8 +36,8 @@
 %%--------------------------------------------------------------------------------
 -export([encode/1, encode/2]).
 
--define(LOG_INFO(Format), io:format("module:~p line:~p" ++ Format ++ "~n", [?LINE, ?MODULE])).
--define(LOG_INFO(Format, Args), io:format("module:~p line:~p" ++ Format ++ "~n", [?LINE, ?MODULE]++Args)).
+-define(LOG_INFO(Format), io:format("module:~p line:~p " ++ Format ++ "~n", [?MODULE, ?LINE])).
+-define(LOG_INFO(Format, Args), io:format("module:~p line:~p " ++ Format ++ "~n", [?MODULE, ?LINE]++Args)).
 
 %%--------------------------------------------------------------------------------
 %% Macros & Records & Types
@@ -130,7 +130,8 @@ next(Level = [Next | Nexts], Buf, Opt) ->
 value1(Value, Nexts, Buf, Opt) ->
   try
     case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
-      nomatch -> value(Value, Nexts, Buf, Opt);
+      nomatch ->
+        value(Value, Nexts, Buf, Opt);
       _ ->
         ?LOG_INFO("is string:~p", [Value]),
         next(Nexts, list_to_binary(Value), Opt)
