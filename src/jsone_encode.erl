@@ -36,8 +36,8 @@
 %%--------------------------------------------------------------------------------
 -export([encode/1, encode/2]).
 
--define(LOG_INFO(Format), io:format("line:~p module:~p ~n" ++ Format, [?LINE, ?MODULE])).
--define(LOG_INFO(Format, Args), io:format("line:~p module:~p ~n" ++ Format, [?LINE, ?MODULE]++Args)).
+-define(LOG_INFO(Format), io:format("module:~p line:~p" ++ Format ++ "~n", [?LINE, ?MODULE])).
+-define(LOG_INFO(Format, Args), io:format("module:~p line:~p" ++ Format ++ "~n", [?LINE, ?MODULE]++Args)).
 
 %%--------------------------------------------------------------------------------
 %% Macros & Records & Types
