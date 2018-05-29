@@ -40,7 +40,8 @@
 %% Macros & Records & Types
 %%--------------------------------------------------------------------------------
 -define(ERROR(Function, Args), {error, {badarg, [{?MODULE, Function, Args, [{line, ?LINE}]}]}}).
--define(IS_STR(X), (is_binary(X) orelse is_atom(X))).
+%%-define(IS_STR(X), (is_binary(X) orelse is_atom(X))).
+-define(IS_STR(X), (is_binary(X) orelse is_atom(X) orelse re:run(X, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$"))).
 -define(IS_UINT(X), (is_integer(X) andalso X >= 0)).
 -define(IS_PNUM(X), (is_number(X) andalso X >=0)).
 -define(IS_DATETIME(Y,M,D,H,Mi,S), (?IS_UINT(Y) andalso ?IS_UINT(M) andalso ?IS_UINT(D) andalso
