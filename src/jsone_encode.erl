@@ -128,7 +128,9 @@ value1(Value, Nexts, Buf, Opt) ->
   try
     case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
       nomatch -> value(Value, Nexts, Buf, Opt);
-      _ -> next(Nexts, list_to_binary(Value), Opt)
+      _ ->
+        io:format("~n~nis string:~p~n~n", [Value]),
+        next(Nexts, list_to_binary(Value), Opt)
     end
   catch
     error:badarg -> value(Value, Nexts, Buf, Opt)
