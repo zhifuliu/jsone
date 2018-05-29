@@ -74,6 +74,20 @@
 -define(OPT, #encode_opt_v2).
 -type opt() :: #encode_opt_v2{}.
 
+is_str(X) ->
+  case (is_binary(X) orelse is_atom(X)) of
+    true -> true;
+    _ ->
+      try
+        case re:run(X, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
+          nomatch -> false;
+          _ -> true
+        end
+      catch
+        error:badarg -> false
+      end
+  end.
+
 %%--------------------------------------------------------------------------------
 %% Exported Functions
 %%--------------------------------------------------------------------------------
@@ -133,6 +147,7 @@ value({{json_utf8, T}}, Nexts, Buf, Opt) ->
     end;
 value(Value, Nexts, Buf, Opt) when is_integer(Value) -> next(Nexts, <<Buf/binary, (integer_to_binary(Value))/binary>>, Opt);
 value(Value, Nexts, Buf, Opt) when is_float(Value)   -> next(Nexts, <<Buf/binary, (float_to_binary(Value, Opt?OPT.float_format))/binary>>, Opt);
+%% value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    -> string(Value, Nexts, Buf, Opt);
 value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    -> string(Value, Nexts, Buf, Opt);
 value({{_,_,_},{_,_,_}} = Value, Nexts, Buf, Opt)    -> datetime(Value, Nexts, Buf, Opt);
 value({Value}, Nexts, Buf, Opt)                      -> object(Value, Nexts, Buf, Opt);
@@ -200,9 +215,16 @@ format_tz_(S) ->
     M = S1 div ?SECONDS_PER_MINUTE,
     [format2digit(H), $:, format2digit(M)].
 
+object_key1(Key, Nexts, Buf, Opt) ->
+  case is_str(Key) of
+    true -> string(Key, Nexts, Buf, Opt);
+    _ -> object_key(Key, Nexts, Buf, Opt)
+  end.
+
 -spec object_key(jsone:json_value(), [next()], binary(), opt()) -> encode_result().
+%%object_key(Key, Nexts, Buf, Opt) when ?IS_STR(Key) ->
 object_key(Key, Nexts, Buf, Opt) when ?IS_STR(Key) ->
-    string(Key, Nexts, Buf, Opt);
+  string(Key, Nexts, Buf, Opt);
 object_key(Key, Nexts, Buf, Opt = ?OPT{object_key_type = scalar}) when is_number(Key) ->
     value(Key, [{char, $"} | Nexts], <<Buf/binary, $">>, Opt);
 object_key(Key = {{Y,M,D},{H,Mi,S}}, Nexts, Buf, Opt = ?OPT{object_key_type = Type}) when ?IS_DATETIME(Y,M,D,H,Mi,S), Type =/= string ->
@@ -316,7 +338,7 @@ object(Members, Nexts, Buf, Opt) ->
 
 -spec object_members(jsone:json_object_members(), [next()], binary(), opt()) -> encode_result().
 object_members([],                  Nexts, Buf, Opt) -> next(Nexts, <<(pp_newline(Buf, Nexts, Opt))/binary, $}>>, Opt);
-object_members([{Key, Value} | Xs], Nexts, Buf, Opt) -> object_key(Key, [{object_value, Value, Xs} | Nexts], Buf, Opt);
+object_members([{Key, Value} | Xs], Nexts, Buf, Opt) -> object_key1(Key, [{object_value, Value, Xs} | Nexts], Buf, Opt);
 object_members(Arg, Nexts, Buf, Opt)                 -> ?ERROR(object_members, [Arg, Nexts, Buf, Opt]).
 
 -spec object_value(jsone:json_value(), jsone:json_object_members(), [next()], binary(), opt()) -> encode_result().
