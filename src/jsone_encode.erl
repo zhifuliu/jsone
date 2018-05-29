@@ -136,7 +136,8 @@ value1(Value, Nexts, Buf, Opt) ->
       _ ->
         ?LOG_INFO("is string:~p", [Value]),
         ?LOG_INFO("to string:~p", [list_to_binary(Value)]),
-        next(Nexts, list_to_binary(Value), Opt)
+        % next(Nexts, list_to_binary(Value), Opt)
+        value(list_to_binary(Value), Nexts, Buf, Opt)
     end
   catch
     error:badarg -> value(Value, Nexts, Buf, Opt)
