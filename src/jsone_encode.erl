@@ -159,15 +159,21 @@ value({{json_utf8, T}}, Nexts, Buf, Opt) ->
             ?ERROR(value, [{json_utf8, T}, Nexts, Buf, Opt])
     end;
 value(Value, Nexts, Buf, Opt) when is_integer(Value) -> next(Nexts, <<Buf/binary, (integer_to_binary(Value))/binary>>, Opt);
-value(Value, Nexts, Buf, Opt) when is_float(Value)   -> next(Nexts, <<Buf/binary, (float_to_binary(Value, Opt?OPT.float_format))/binary>>, Opt);
+value(Value, Nexts, Buf, Opt) when is_float(Value)   ->
+  io:format("~n~n ~p~n~n", [Value]),
+  next(Nexts, <<Buf/binary, (float_to_binary(Value, Opt?OPT.float_format))/binary>>, Opt);
 %% value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    -> string(Value, Nexts, Buf, Opt);
-value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    -> string(Value, Nexts, Buf, Opt);
+value(Value, Nexts, Buf, Opt) when ?IS_STR(Value)    ->
+  io:format("~n~n ~p~n~n", [Value]),
+  string(Value, Nexts, Buf, Opt);
 value({{_,_,_},{_,_,_}} = Value, Nexts, Buf, Opt)    -> datetime(Value, Nexts, Buf, Opt);
 value({Value}, Nexts, Buf, Opt)                      -> object(Value, Nexts, Buf, Opt);
 value([{}], Nexts, Buf, Opt)                         -> object([], Nexts, Buf, Opt);
 value([{{_,_,_},{_,_,_}}|_] = Value, Nexts, Buf, Opt)-> array(Value, Nexts, Buf, Opt);
 value([{_, _}|_] = Value, Nexts, Buf, Opt)           -> object(Value, Nexts, Buf, Opt);
-value(Value, Nexts, Buf, Opt) when ?IS_MAP(Value)    -> ?ENCODE_MAP(Value, Nexts, Buf, Opt);
+value(Value, Nexts, Buf, Opt) when ?IS_MAP(Value)    ->
+  io:format("~n~n ~p~n~n", [Value]),
+  ?ENCODE_MAP(Value, Nexts, Buf, Opt);
 value(Value, Nexts, Buf, Opt) when is_list(Value)    -> array(Value, Nexts, Buf, Opt);
 value(Value, Nexts, Buf, Opt)                        -> ?ERROR(value, [Value, Nexts, Buf, Opt]).
 
