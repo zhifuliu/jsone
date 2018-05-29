@@ -40,8 +40,8 @@
 %% Macros & Records & Types
 %%--------------------------------------------------------------------------------
 -define(ERROR(Function, Args), {error, {badarg, [{?MODULE, Function, Args, [{line, ?LINE}]}]}}).
-%%-define(IS_STR(X), (is_binary(X) orelse is_atom(X))).
--define(IS_STR(X), (is_binary(X) orelse is_atom(X) orelse re:run(X, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$"))).
+-define(IS_STR(X), (is_binary(X) orelse is_atom(X))).
+%%-define(IS_STR(X), (is_binary(X) orelse is_atom(X) orelse re:run(X, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$"))).
 -define(IS_UINT(X), (is_integer(X) andalso X >= 0)).
 -define(IS_PNUM(X), (is_number(X) andalso X >=0)).
 -define(IS_DATETIME(Y,M,D,H,Mi,S), (?IS_UINT(Y) andalso ?IS_UINT(M) andalso ?IS_UINT(D) andalso
@@ -98,8 +98,8 @@ encode(Value) ->
 
 -spec encode(jsone:json_value(), [jsone:encode_option()]) -> encode_result().
 encode(Value, Options) ->
-    Opt = parse_options(Options),
-    value(Value, [], <<"">>, Opt).
+  Opt = parse_options(Options),
+  value1(Value, [], <<"">>, Opt).
 
 %%--------------------------------------------------------------------------------
 %% Internal Functions
@@ -123,6 +123,16 @@ next(Level = [Next | Nexts], Buf, Opt) ->
         {char, C} ->
             next(Nexts, <<Buf/binary, C>>, Opt)
     end.
+
+value1(Value, Nexts, Buf, Opt) ->
+  try
+    case re:run(Value, "^[\x{4e00}-\x{9fa5}A-Za-z0-9]*[@]*$") of
+      nomatch -> value(Value, Nexts, Buf, Opt);
+      _ -> next(Nexts, list_to_binary(Value), Opt)
+    end
+  catch
+    error:badarg -> value(Value, Nexts, Buf, Opt)
+  end.
 
 -spec value(jsone:json_value(), [next()], binary(), opt()) -> encode_result().
 value(null, Nexts, Buf, Opt)                         -> next(Nexts, <<Buf/binary, "null">>, Opt);
@@ -227,11 +237,11 @@ object_key1(Key, Nexts, Buf, Opt) ->
 object_key(Key, Nexts, Buf, Opt) when ?IS_STR(Key) ->
   string(Key, Nexts, Buf, Opt);
 object_key(Key, Nexts, Buf, Opt = ?OPT{object_key_type = scalar}) when is_number(Key) ->
-    value(Key, [{char, $"} | Nexts], <<Buf/binary, $">>, Opt);
+  value1(Key, [{char, $"} | Nexts], <<Buf/binary, $">>, Opt);
 object_key(Key = {{Y,M,D},{H,Mi,S}}, Nexts, Buf, Opt = ?OPT{object_key_type = Type}) when ?IS_DATETIME(Y,M,D,H,Mi,S), Type =/= string ->
-    value(Key, Nexts, Buf, Opt);
+  value1(Key, Nexts, Buf, Opt);
 object_key(Key, Nexts, Buf, Opt = ?OPT{object_key_type = value}) ->
-    case value(Key, [], <<>>, Opt) of
+    case value1(Key, [], <<>>, Opt) of
         {error, Reason} -> {error, Reason};
         {ok, BinaryKey} -> string(BinaryKey, Nexts, Buf, Opt)
     end;
@@ -329,7 +339,7 @@ array(List, Nexts, Buf, Opt) ->
 
 -spec array_values(jsone:json_array(), [next()], binary(), opt()) -> encode_result().
 array_values([],       Nexts, Buf, Opt) -> next(Nexts, <<(pp_newline(Buf, Nexts, Opt))/binary, $]>>, Opt);
-array_values([X | Xs], Nexts, Buf, Opt) -> value(X, [{array_values, Xs} | Nexts], Buf, Opt).
+array_values([X | Xs], Nexts, Buf, Opt) -> value1(X, [{array_values, Xs} | Nexts], Buf, Opt).
 
 -spec object(jsone:json_object_members(), [next()], binary(), opt()) -> encode_result().
 object(Members, Nexts, Buf, ?OPT{canonical_form = true}=Opt) ->
@@ -344,7 +354,7 @@ object_members(Arg, Nexts, Buf, Opt)                 -> ?ERROR(object_members, [
 
 -spec object_value(jsone:json_value(), jsone:json_object_members(), [next()], binary(), opt()) -> encode_result().
 object_value(Value, Members, Nexts, Buf, Opt) ->
-    value(Value, [{object_members, Members} | Nexts], Buf, Opt).
+  value1(Value, [{object_members, Members} | Nexts], Buf, Opt).
 
 -spec pp_space(binary(), opt()) -> binary().
 pp_space(Buf, Opt) -> padding(Buf, Opt?OPT.space).
