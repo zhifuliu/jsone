@@ -421,6 +421,7 @@ padding(Buf, N) -> padding(<<Buf/binary, "         ">>, N - 9).
 
 -spec parse_options([jsone:encode_option()]) -> opt().
 parse_options(Options) ->
+  ?LOG_INFO("down_json: ~p", [Options]),
     parse_option(Options, ?OPT{}).
 
 -spec parse_option([jsone:encode_option()], opt()) -> opt().
