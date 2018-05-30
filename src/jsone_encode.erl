@@ -438,7 +438,9 @@ parse_option([{indent, N}|T], Opt) when is_integer(N), N >= 0 ->
 parse_option([{object_key_type, Type}|T], Opt) when Type =:= string; Type =:= scalar; Type =:= value ->
   parse_option(T, Opt?OPT{object_key_type = Type});
 parse_option([{down_json, Flag} | T], Opt) ->
-  parse_option(T, Opt?OPT{down_json = Flag});
+  ?LOG_INFO("down_json: ~p", [Flag]),
+  Opt1 = Opt?OPT{down_json = Flag},
+  parse_option(T, Opt1);
 parse_option([{datetime_format, Fmt}|T], Opt) ->
     case Fmt of
         iso8601                                 -> parse_option(T, Opt?OPT{datetime_format = {iso8601, 0}});
