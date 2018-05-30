@@ -194,7 +194,8 @@
                        | {datetime_format, datetime_encode_format()}
                        | {object_key_type, string | scalar | value}
                        | {space, non_neg_integer()}
-                       | {indent, non_neg_integer()}
+| {indent, non_neg_integer()}
+| {down_json, true | false}
                        | common_option().
 %% `native_utf8': <br />
 %% - Encodes UTF-8 characters as a human-readable(non-escaped) string <br />
