@@ -65,6 +65,7 @@
               | {object_members, jsone:json_object_members()}
               | {char, binary()}.
 
+%% 添加 down_json 配置，如果是 true 的话说明是发给客户端或前端的，需要对字符串做处理
 -record(encode_opt_v2, {
           native_utf8 = false :: boolean(),
           canonical_form = false :: boolean(),
@@ -73,7 +74,8 @@
           object_key_type = string :: string | scalar | value,
           space = 0 :: non_neg_integer(),
           indent = 0 :: non_neg_integer(),
-          undefined_as_null = false :: boolean()
+          undefined_as_null = false :: boolean(),
+  down_json = false :: boolean()
          }).
 -define(OPT, #encode_opt_v2).
 -type opt() :: #encode_opt_v2{}.
@@ -137,7 +139,10 @@ value1(Value, Nexts, Buf, Opt) ->
         ?LOG_INFO("is string:~p", [Value]),
         ?LOG_INFO("to string:~p", [list_to_binary(Value)]),
         % next(Nexts, list_to_binary(Value), Opt)
-        value(list_to_binary(Value), Nexts, Buf, Opt)
+        case ?OPT.down_json of
+          true -> value(list_to_binary(Value), Nexts, Buf, Opt);
+          _ -> value(Value, Nexts, Buf, Opt)
+        end
     end
   catch
     error:badarg -> value(Value, Nexts, Buf, Opt)
