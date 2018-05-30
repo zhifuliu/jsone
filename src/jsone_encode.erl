@@ -139,9 +139,9 @@ value1(Value, Nexts, Buf, Opt) ->
         ?LOG_INFO("is string:~p", [Value]),
         ?LOG_INFO("to string:~p", [list_to_binary(Value)]),
         % next(Nexts, list_to_binary(Value), Opt)
-        ?LOG_INFO("~p", [?OPT]),
-        ?LOG_INFO("~p", [?OPT.down_json]),
-        case ?OPT.down_json of
+        ?LOG_INFO("~p", [Opt]),
+        ?LOG_INFO("~p", [Opt?OPT.down_json]),
+        case Opt?OPT.down_json of
           true -> value(list_to_binary(Value), Nexts, Buf, Opt);
           _ -> value(Value, Nexts, Buf, Opt)
         end
